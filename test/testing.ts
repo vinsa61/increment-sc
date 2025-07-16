@@ -1,14 +1,17 @@
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import { Counter } from "../typechain-types";
 
 describe("Increment Test", function(){
     let factory: any;
     let counter: Counter;
+    let owner: any;
+    let otherAccount: any;
 
     beforeEach( async function(){
+        [owner, otherAccount] = await ethers.getSigners();
         factory = await ethers.getContractFactory("Counter");
-        counter = await factory.deploy();
+        counter = await factory.deploy(owner.address);
     });
 
     it("Deploy Success", async function(){
@@ -16,22 +19,27 @@ describe("Increment Test", function(){
         assert.isOk(await counter.getAddress());
     });
 
+    it("Verify Owner Variable", async function(){
+        assert.equal(await counter.owner(), owner.address);
+    });
+
     it("Counter Initial Value is Zero", async function(){
         const count = await counter.getCount();
         assert.equal(count, 0n);
-    })
+    });
 
-    it("Call Increment Function", async function(){
-        let x = 0;
-        while(x < 3){
-            const txn = await counter.increment();
-            const receipt = await txn.wait();
+    it("Call Increment Function Using Owner Account", async function(){
+        const txn = await counter.connect(owner).increment();
+        const receipt = await txn.wait();
 
-            // console.log(receipt);
-            assert.equal(receipt?.status, 1);
-            x++;
-        }
-    })
+        assert.equal(receipt?.status, 1);
+        // console.log(receipt);
+    });
+
+    it("Call Increment Function Using Other Account should Fail", async function(){
+        await expect(counter.connect(otherAccount).increment())
+        .to.be.revertedWith('Not the owner');
+    });
 
     it("Call getCount Function", async function(){
         await counter.increment();
@@ -39,7 +47,13 @@ describe("Increment Test", function(){
         await counter.increment();
         const count = await counter.getCount();
         assert.equal(count, 3n);
-    })
+    });
+
+    it("CountIncremented Event Emitted with Correct Arguments", async function(){
+        await expect(counter.connect(owner).increment())
+        .to.emit(counter, "CountIncremented")
+        .withArgs(1, owner.address);
+    });
 
 })
 

@@ -3,10 +3,13 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
   Interface,
+  EventFragment,
+  AddressLike,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -15,18 +18,38 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
+  TypedLogDescription,
   TypedListener,
   TypedContractMethod,
 } from "./common";
 
 export interface CounterInterface extends Interface {
-  getFunction(nameOrSignature: "getCount" | "increment"): FunctionFragment;
+  getFunction(
+    nameOrSignature: "getCount" | "increment" | "owner"
+  ): FunctionFragment;
+
+  getEvent(nameOrSignatureOrTopic: "CountIncremented"): EventFragment;
 
   encodeFunctionData(functionFragment: "getCount", values?: undefined): string;
   encodeFunctionData(functionFragment: "increment", values?: undefined): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "getCount", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "increment", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+}
+
+export namespace CountIncrementedEvent {
+  export type InputTuple = [newCount: BigNumberish, owner: AddressLike];
+  export type OutputTuple = [newCount: bigint, owner: string];
+  export interface OutputObject {
+    newCount: bigint;
+    owner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export interface Counter extends BaseContract {
@@ -76,6 +99,8 @@ export interface Counter extends BaseContract {
 
   increment: TypedContractMethod<[], [void], "nonpayable">;
 
+  owner: TypedContractMethod<[], [string], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -86,6 +111,28 @@ export interface Counter extends BaseContract {
   getFunction(
     nameOrSignature: "increment"
   ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
 
-  filters: {};
+  getEvent(
+    key: "CountIncremented"
+  ): TypedContractEvent<
+    CountIncrementedEvent.InputTuple,
+    CountIncrementedEvent.OutputTuple,
+    CountIncrementedEvent.OutputObject
+  >;
+
+  filters: {
+    "CountIncremented(uint256,address)": TypedContractEvent<
+      CountIncrementedEvent.InputTuple,
+      CountIncrementedEvent.OutputTuple,
+      CountIncrementedEvent.OutputObject
+    >;
+    CountIncremented: TypedContractEvent<
+      CountIncrementedEvent.InputTuple,
+      CountIncrementedEvent.OutputTuple,
+      CountIncrementedEvent.OutputObject
+    >;
+  };
 }
