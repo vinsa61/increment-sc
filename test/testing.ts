@@ -6,7 +6,7 @@ describe("Increment Test", function(){
     let factory: any;
     let counter: Counter;
 
-    before( async function(){
+    beforeEach( async function(){
         factory = await ethers.getContractFactory("Counter");
         counter = await factory.deploy();
     });
@@ -15,6 +15,11 @@ describe("Increment Test", function(){
         console.log("Address: ", await counter.getAddress());
         assert.isOk(await counter.getAddress());
     });
+
+    it("Counter Initial Value is Zero", async function(){
+        const count = await counter.getCount();
+        assert.equal(count, 0n);
+    })
 
     it("Call Increment Function", async function(){
         let x = 0;
@@ -29,6 +34,9 @@ describe("Increment Test", function(){
     })
 
     it("Call getCount Function", async function(){
+        await counter.increment();
+        await counter.increment();
+        await counter.increment();
         const count = await counter.getCount();
         assert.equal(count, 3n);
     })
