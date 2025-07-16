@@ -137,3 +137,21 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Build artifacts and cache
+/artifacts
+/cache
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Editor-specific
+.vscode
+.idea
+
+# Hardhat specific
+/coverage
+coverage.json
+typechain-types/
+hardhat.config.ts.backup
